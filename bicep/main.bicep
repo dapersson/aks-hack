@@ -12,12 +12,15 @@ param location string = resourceGroup().location
 ])
 param env string = 'dev'
 
+param deployVnet bool = true
+param deployAzServices bool = true
 param deployAks bool = true
-param deployVm bool = true
+param deployVm bool = false
+//param deployPe bool = false
 
 // Variables
 var name = '${resourcename}-${env}'
-
+var networkPlugin = 'kubenet' // 'kubenet' | 'azure'
 
 module umi 'umi.bicep' = {
   name: 'umiDeploy'
@@ -27,15 +30,16 @@ module umi 'umi.bicep' = {
   }
 }
 
-module vnet 'vnet.bicep' = {
+module vnet 'vnet.bicep' = if(deployVnet){
   name: 'vnetDeploy'
   params: {
-    addressprefix: '10.0.0.0/22'
+    addressprefix: '10.0.0.0/21'
     location: location
     name: name
+    snkubenetAddrPrefix: '10.0.3.0/24'
     subnets: [
       {
-        name: 'sn-aks'
+        name: 'sn-aks-cni'
         subnetprefix: '10.0.0.0/23'
       }
       {
@@ -46,6 +50,11 @@ module vnet 'vnet.bicep' = {
         name: 'sn-pe'
         subnetprefix: '10.0.2.32/27'
       }
+      {
+        name: 'sn-aks-kubenet'
+        subnetprefix: '10.0.3.0/24'
+      }
+      
     ]
   }
   dependsOn: [
@@ -53,7 +62,7 @@ module vnet 'vnet.bicep' = {
   ]
 }
 
-module privateDnsZone 'privatednszone.bicep' = {
+module privateDnsZone 'privatednszone.bicep' = if(deployAzServices){
   name: 'privateDnsZoneDeploy'
   params: {
     privateDnsZoneName: '${name}.privatelink.${toLower(location)}.azmk8s.io'
@@ -65,7 +74,7 @@ module privateDnsZone 'privatednszone.bicep' = {
   ]
 }
 
-module storage 'storageaccount.bicep' = {
+module storage 'storageaccount.bicep' = if(deployAzServices){
   name: 'stgDeploy'
   params: {
     location: location
@@ -76,7 +85,7 @@ module storage 'storageaccount.bicep' = {
   ]
 }
 
-module la 'loganalytics.bicep' = {
+module la 'loganalytics.bicep' = if(deployAzServices){
   name: 'laDeploy'
   params: {
     location: location
@@ -84,7 +93,7 @@ module la 'loganalytics.bicep' = {
   }
 }
 
-module acr 'acr.bicep' = {
+module acr 'acr.bicep' = if(deployAzServices){
   name: 'acrDeploy'
   params: {
     location: location
@@ -95,7 +104,7 @@ module acr 'acr.bicep' = {
   ]
 }
 
-module akv 'akv.bicep' = {
+module akv 'akv.bicep' = if(deployAzServices){
   name: 'akvDeploy'
   params: {
     location: location
@@ -106,10 +115,10 @@ module akv 'akv.bicep' = {
   ]
 }
 
-module aks 'aks.bicep' = if (deployAks) {
-  name: 'aksDeploy'
+module akscni 'aks.bicep' = if (networkPlugin == 'azure' && deployAks) {
+  name: 'aksCniDeploy'
   params: {
-    aksSubnetId: vnet.outputs.subnetIdaks
+    aksSubnetId: vnet.outputs.subnetIdakscni
     dnsServiceIP: '10.2.0.10'
     dockerBridgeCidr: '172.17.0.1/16'
     name: name
@@ -119,6 +128,33 @@ module aks 'aks.bicep' = if (deployAks) {
     adminGroupObjectIDs: admingroupobjectid
     kubernetesVersion: '1.24.6' // az aks get-versions --location westeurope --output table
     privateDnsZoneId: privateDnsZone.outputs.privateDNSZoneId
+    networkPlugin: networkPlugin
+
+  }
+  dependsOn: [
+    umi
+    akv
+    acr
+    la
+    
+  ]
+}
+
+module akskubenet 'aks.bicep' = if (networkPlugin == 'kubenet' && deployAks) {
+  name: 'aksKubenetDeploy'
+  params: {
+    aksSubnetId: vnet.outputs.subnetIdakskubenet
+    dnsServiceIP: '172.10.0.10'
+    dockerBridgeCidr: '172.17.0.1/16'
+    podCidr: '10.240.100.0/22'
+    serviceCidr: '172.10.0.0/16'
+    name: name
+    nodeResourceGroup: 'rg-${name}-aks'
+    location: location
+    adminGroupObjectIDs: admingroupobjectid
+    kubernetesVersion: '1.24.3' // az aks get-versions --location westeurope --output table
+    privateDnsZoneId: privateDnsZone.outputs.privateDNSZoneId
+    networkPlugin: networkPlugin
   }
   dependsOn: [
     umi

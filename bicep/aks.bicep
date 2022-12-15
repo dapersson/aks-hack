@@ -18,10 +18,12 @@ param serviceCidr string
 param aksSubnetId string
 param adminGroupObjectIDs string
 param privateDnsZoneId string
+param podCidr string = ''
+param networkPlugin string
 
 // vars
 param kubernetesVersion string
-var agentVMSize = 'Standard_D4s_v4'
+var agentVMSize = 'Standard_D4ds_v4'
 var managedIdentityOperatorDefId = 'f1a07417-d97a-45cb-824c-7a7467783830' // Managed Identity Operator
 
 // Existing resources
@@ -53,6 +55,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-07-02-preview' = {
       '${umi.id}': {}
     }
   }
+
   properties: {
     kubernetesVersion: kubernetesVersion
     enableRBAC: true
@@ -65,6 +68,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-07-02-preview' = {
         adminGroupObjectIDs
       ]
     }
+
     dnsPrefix: 'aks-${name}'
     identityProfile: {
       kubeletidentity: {
@@ -94,9 +98,14 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-07-02-preview' = {
     agentPoolProfiles: [
       {
         name: 'systempool'
-        count: 2
-        minCount: 2
-        maxCount: 3
+        count: 1
+        minCount: 1
+        maxCount: 5
+        availabilityZones: [
+          '1'
+          '2'
+          '3'
+        ]
         mode: 'System'
         vmSize: agentVMSize
         enableEncryptionAtHost: true
@@ -104,7 +113,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-07-02-preview' = {
         osType: 'Linux'
         enableAutoScaling: true
         vnetSubnetID: aksSubnetId
-        maxPods: 100
+        maxPods: networkPlugin == 'azure' ? 75 : 150
         upgradeSettings: {
           maxSurge: '33%'
         }
@@ -115,8 +124,13 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-07-02-preview' = {
       {
         name: 'workpool'
         count: 2
-        minCount: 2
-        maxCount: 3
+        minCount: 1
+        maxCount: 5
+        availabilityZones: [
+          '1'
+          '2'
+          '3'
+        ]
         mode: 'User'
         vmSize: agentVMSize
         enableEncryptionAtHost: true
@@ -124,7 +138,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-07-02-preview' = {
         osType: 'Linux'
         enableAutoScaling: true
         vnetSubnetID: aksSubnetId
-        maxPods: 100
+        maxPods: networkPlugin == 'azure' ? 75 : 150
         upgradeSettings: {
           maxSurge: '33%'
         }
@@ -137,11 +151,13 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-07-02-preview' = {
     nodeResourceGroup: nodeResourceGroup
 
     networkProfile: {
-      networkPlugin: 'azure'
+      networkPlugin: networkPlugin
       loadBalancerSku: 'standard'
       dockerBridgeCidr: dockerBridgeCidr
       dnsServiceIP: dnsServiceIP
       serviceCidr: serviceCidr
+      podCidr: networkPlugin == 'azure' ? null : podCidr
+      networkPolicy: networkPlugin == 'azure' ? 'azure' : 'calico'
     }
     autoUpgradeProfile: {
       upgradeChannel: 'stable'

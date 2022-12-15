@@ -2,6 +2,7 @@ param name string
 param addressprefix string
 param subnets array
 param location string
+param snkubenetAddrPrefix string =  ''
 
 
 var networkContributorRoleDefId = '4d97b98b-1d4f-4787-a291-c67834d212e7'
@@ -28,18 +29,35 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-07-01' = {
     }]
   }
 
-  resource subnetaks 'subnets' existing = {
-    name: 'vnet-${name}-sn-aks'
+  resource subnetakscni 'subnets' existing = {
+    name: 'vnet-${name}-sn-aks-cni'
+  }
+
+  resource subnetakskubenet 'subnets' existing = {
+    name: 'vnet-${name}-sn-aks-kubenet'
   }
 
   resource subnetvms 'subnets' existing = {
     name: 'vnet-${name}-sn-vms'
   }
+  
+}
+
+resource snakskubenet 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = if(snkubenetAddrPrefix != ''){
+  name: 'vnet-${name}-sn-aks-kubenet'
+  parent: vnet
+  properties: {
+    addressPrefix: snkubenetAddrPrefix 
+    routeTable: {
+      id: rt.id
+      location: location
+    }
+  } 
 }
 
 
-resource setVnetRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  scope: vnet
+resource setVnetRbac 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: resourceGroup()
   name: guid(umi.id, networkContributorRoleDefId, name)
   properties: {
     roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', networkContributorRoleDefId)
@@ -48,7 +66,18 @@ resource setVnetRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-preview
   }
 }
 
+resource rt 'Microsoft.Network/routeTables@2022-05-01' = {
+  name: 'rt-${vnet::subnetakskubenet.name}'
+  location: location
+  properties: {
+    disableBgpRoutePropagation: false
+    routes: [
+    ]
+  }
+}
 
+output kubenetrtId string = rt.id
 output vnetId string = vnet.id
-output subnetIdaks string = vnet::subnetaks.id 
+output subnetIdakscni string = vnet::subnetakscni.id 
+output subnetIdakskubenet string = vnet::subnetakskubenet.id 
 output subnetIdvms string = vnet::subnetvms.id 
