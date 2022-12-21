@@ -27,5 +27,3 @@ Content-Type:application/json
 http://{{host}}/state
 
 
-  
-  git config --global user.name "Jonas"
