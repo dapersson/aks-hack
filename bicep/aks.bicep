@@ -83,6 +83,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-07-02-preview' = {
       privateDNSZone: privateDnsZoneId
       enablePrivateClusterPublicFQDN: false
     }
+    
 
     oidcIssuerProfile: {
       enabled: true
