@@ -1,0 +1,31 @@
+@host = 10.0.3.7
+POST http://{{host}}/calculate/add 
+Content-Type:application/json 
+
+{"operandOne":"{{$randomInt 10 50}}","operandTwo":"{{$randomInt 10 50}}"}
+
+###
+
+POST http://{{host}}/calculate/subtract 
+Content-Type:application/json 
+
+{"operandOne":"{{$randomInt 10 50}}","operandTwo":"{{$randomInt 10 50}}"}
+
+###
+POST http://{{host}}/calculate/divide 
+Content-Type:application/json 
+
+{"operandOne":"{{$randomInt 10 50}}","operandTwo":"{{$randomInt 10 50}}"}
+
+###
+POST http://{{host}}/calculate/multiply 
+Content-Type:application/json 
+
+{"operandOne":"{{$randomInt 10 50}}","operandTwo":"{{$randomInt 10 50}}"}
+
+###
+http://{{host}}/state
+
+
+  
+  git config --global user.name "Jonas"
