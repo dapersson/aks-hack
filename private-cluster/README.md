@@ -46,109 +46,114 @@ Click on the "Remote Explorer" extension in VS Code and choose "GitHub Codespace
 
 Below is the step-by-step guidance. 
 
-### Step 1 - Log in to Azure
-
-- az login
-- az account set -s [your subscription]
-
+## Step 1 - Log in to Azure
+```shell
+az login
+az account set -s [your subscription]
+```
 Need to register the following features. This is a two step process, run the following two commands we will return to this later because it can take up to 10 minutes to be finished.
-
-- az feature register --namespace microsoft.compute --name EncryptionAtHost
-- az provider register --namespace Microsoft.ContainerService
-
-### Step 2 - Create resourcegroup and choose resourcename
+```shell
+az feature register --namespace microsoft.compute --name EncryptionAtHost
+az provider register --namespace Microsoft.ContainerService
+```
+## Step 2 - Create resourcegroup and choose resourcename
 
 Choose a resourcename of six letters e.g "majnor" that will be used to create a unique environment. That will also be a part of the naming convention to be used. 
-Create resourcegroup 
-- az group create -l westeurope -n [rg-resourcename]
-
+Create resourcegroup
+```shell 
+az group create -l westeurope -n [rg-resourcename]
+```
 Verify that it has been created in the portal. 
 
-### Step 3 - Get familiar with Bicep
+## Step 3 - Get familiar with Bicep
 
 Open aks-hack/private-cluster/bicep folder in VS Code. 
 
 Make sure the following parameters are set in the main.bicep file. 
 
+```shell
 param deployInit bool = true
 param deployAzServices bool = false
 param deployAks bool = false
 param deployVm bool = false
-
+```
 Run the following command. 
-
-- az deployment group create -g [rg-resourcename] -n mainDeploy -f main.bicep -p resourcename=[resourcename]
-
+```shell
+az deployment group create -g [rg-resourcename] -n mainDeploy -f main.bicep -p resourcename=[resourcename]
+```
 Verify the deployment in the portal.
 
-### Step 4 - Deploy supporting Azure services
+## Step 4 - Deploy supporting Azure services
 
 Change the following parameter to "true" in main.bicep
-
+```shell
 param deployAzServices bool = true
-
+```
 Run the following command. 
-
-- az deployment group create -g [rg-resourcename] -n mainDeploy -f main.bicep -p resourcename=[resourcename]
-
+```shell
+az deployment group create -g [rg-resourcename] -n mainDeploy -f main.bicep -p resourcename=[resourcename]
+```
 Verify the deployment in the portal.
 
-### Step 5 - Deploy AKS
+## Step 5 - Deploy AKS
 
 Run the following Azure CLI commands. This is the second step in registering new features that we did in step 1.  
-- az provider register -n microsoft.compute
-- az provider register --namespace Microsoft.ContainerService
-
+```shell
+az provider register -n microsoft.compute
+az provider register --namespace Microsoft.ContainerService
+```
 Change the following parameter to "true" in main.bicep
-
+```shell
 param deployAzServices bool = true
-
+```
 Add the following parameter in the Azure CLI command. 
-
+```shell
 admingroupobjectid=[objectId of AAD group]
-
+```
 This should be a valid objectId of a group in AAD that will have cluster role admin in AKS. 
 
 
 Run the following command. 
-
-- az deployment group create -g [rg-resourcename] -n mainDeploy -f main.bicep -p resourcename=[resourcename] admingroupobjectid=[objectId of AAD group]
-
+```shell
+az deployment group create -g [rg-resourcename] -n mainDeploy -f main.bicep -p resourcename=[resourcename] admingroupobjectid=[objectId of AAD group]
+```
 Verify the deployment in the portal.
 
-### Step 5 - Upload file to storage and deploy deploy VM
+## Step 6 - Upload file to storage and deploy deploy VM
 
 Upload the file "setup.ps1" to your storageaccount. Run the following command. 
-
-- az storage blob upload -f setup.ps1 --account-name [your storageaccount name] -c vmconfig -n setup.ps1
-
+```shell
+az storage blob upload -f setup.ps1 --account-name [your storageaccount name] -c vmconfig -n setup.ps1
+```
 Change the following parameter to "true" in main.bicep
-
+```shell
 param deployVm bool = true
-
+```
 Identify your IP address and add the following parameters to your Azure CLI command. 
+```shell
+az deployment group create -g [rg-resourcename] -n mainDeploy -f main.bicep -p resourcename=[resourcename] admingroupobjectid=[objectId of AAD group] allowedhostIp=[your IP address] vmpwd=[Set a pwd of 8 chars vm]
+```
 
-- az deployment group create -g [rg-resourcename] -n mainDeploy -f main.bicep -p resourcename=[resourcename] admingroupobjectid=[objectId of AAD group] allowedhostIp=[your IP address] vmpwd=[Set a pwd of 8 chars vm]
-
-
-### Step 6 - Get access to AKS
+## Step 7 - Get access to AKS
 
 Login to the VM in Azure, open a terminal and run the following commands. 
-
-- az login -t [your tenantId]
-- az aks get-credentials --resource-group [rg-resourcename] --name aks-[resourcename]-dev
-
+```shell
+az login -t [your tenantId]
+az aks get-credentials --resource-group [rg-resourcename] --name aks-[resourcename]-dev
+```
 Validate access
-
-- kubectl get pods
-
+```shell
+kubectl get pods
+```
 Use the browser to valdate the login. You should see "No resources found in default namespace."
 
 if you want to create a shortcut for Kubectl run the following commands in the terminal. 
-
-- New-Item -Path $profile -Type File -Force 
-- notepad $profile
-- Set-Alias -Name k -Value kubectl
-- Save the file restart the terminal. 
-
+```shell
+New-Item -Path $profile -Type File -Force 
+notepad $profile
+Set-Alias -Name k -Value kubectl
+```
+Save the file restart the terminal. 
 Validate by running "k get pods" in a terminal. 
+
+Done.
