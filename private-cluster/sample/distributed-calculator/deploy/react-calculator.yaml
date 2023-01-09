@@ -4,6 +4,8 @@ metadata:
   name: calculator-front-end
   labels:
     app: calculator-front-end
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
 spec:
   selector:
     app: calculator-front-end

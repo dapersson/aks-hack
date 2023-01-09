@@ -4,6 +4,6 @@ choco install kubernetes-cli -y -f
 choco install kubens -y
 choco install kubectx -y
 choco install azure-kubelogin -y
-choco install kubernetes-helm -y
 choco install openlens -y --ignore-checksums
+choco install kubernetes-helm -y
 
