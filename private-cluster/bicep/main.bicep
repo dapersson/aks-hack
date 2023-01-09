@@ -15,7 +15,7 @@ param env string = 'dev'
 
 param deployInit bool = true
 param deployAzServices bool = true
-param deployAks bool = false
+param deployAks bool = true
 param deployVm bool = false
 
 // Variables

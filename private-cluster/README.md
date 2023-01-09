@@ -37,6 +37,10 @@ git clone <your GitHub repository url>/aks-hack
 cd aks-hack/private-cluster 
 ```
 
+### Open the repo in Codespaces
+
+Click on the "Remote Explorer" extension in VS Code and choose "GitHub Codespaces" in the dropdown at the top. Then click "Create Codespace". Choose your cloned repo and the main branch, set the size to "4 cores, 8 GB RAM, 32 GB storage". VS Code restarts and now run in GitHub Codespaces. 
+
 
 ## Step-by-step guidance
 
@@ -52,14 +56,58 @@ Need to register the following features. This is a two step process, run the fol
 - az feature register --namespace microsoft.compute --name EncryptionAtHost
 - az provider register --namespace Microsoft.ContainerService
 
-### Step 2
+### Step 2 - Create resourcegroup and choose resourcename
 
-az group create -l westeurope -n [rg-myprefix]
-check in portal
+Choose a resourcename of six letters e.g "majnor" that will be used to create a unique environment. That will also be a part of the naming convention to be used. 
+Create resourcegroup 
+- az group create -l westeurope -n [rg-resourcename]
 
-### Step 3 
+Verify that it has been created in the portal. 
 
-Get 
+### Step 3 - Get familiar with Bicep
+
+Open aks-hack/private-cluster/bicep folder in VS Code. 
+
+Make sure the following parameters are set in the main.bicep file. 
+
+param deployInit bool = true
+param deployAzServices bool = false
+param deployAks bool = false
+param deployVm bool = false
+
+Run the following command. 
+
+- az deployment group create -g [rg-resourcename] -n mainDeploy -f .\main.bicep -p resourcename=[resourcename]
+
+Verify the deployment in the portal.
+
+### Step 4 - Deploy supporting Azure services
+
+Change the following parameter to "true" in main.bicep
+
+param deployAzServices bool = true
+
+Run the following command. 
+
+- az deployment group create -g [rg-resourcename] -n mainDeploy -f .\main.bicep -p resourcename=[resourcename]
+
+Verify the deployment in the portal.
+
+### Step 5 - Deploy AKS
+
+Run the following Azure CLI commands. This is the second step in registering new features 
+- az provider register -n microsoft.compute
+- az provider register --namespace Microsoft.ContainerService
+
+Change the following parameter to "true" in main.bicep
+
+param deployAzServices bool = true
+
+Run the following command. 
+
+- az deployment group create -g [rg-resourcename] -n mainDeploy -f .\main.bicep -p resourcename=[resourcename]
+
+Verify the deployment in the portal.
 
 
 
