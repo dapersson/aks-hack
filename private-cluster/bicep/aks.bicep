@@ -23,7 +23,9 @@ param networkPlugin string
 
 // vars
 param kubernetesVersion string
-var agentVMSize = 'Standard_D4ds_v4'
+//var agentVMSize = 'Standard_D4ds_v4'
+var agentVMSize = 'Standard_D4ds_v5'
+
 var managedIdentityOperatorDefId = 'f1a07417-d97a-45cb-824c-7a7467783830' // Managed Identity Operator
 
 // Existing resources
@@ -105,7 +107,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-07-02-preview' = {
         minCount: 1
         maxCount: 5
         availabilityZones: [
-          '1'
+        //  '1'
           '2'
           '3'
         ]
@@ -130,7 +132,7 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-07-02-preview' = {
         minCount: 1
         maxCount: 5
         availabilityZones: [
-          '1'
+        //  '1'
           '2'
           '3'
         ]
