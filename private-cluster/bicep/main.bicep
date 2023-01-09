@@ -14,9 +14,9 @@ param env string = 'dev'
 
 
 param deployInit bool = true
-param deployAzServices bool = true
-param deployAks bool = true
-param deployVm bool = true
+param deployAzServices bool = false
+param deployAks bool = false
+param deployVm bool = false
 
 // Variables
 var name = '${resourcename}-${env}'
