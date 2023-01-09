@@ -1,9 +1,9 @@
 // params
 param resourcename string
-param admingroupobjectid string
-param allowedhostIp string
+param admingroupobjectid string = ''
+param allowedhostIp string = ''
 @secure()
-param vmpwd string
+param vmpwd string = ''
 param location string = resourceGroup().location
 @allowed([
   'dev'
@@ -12,11 +12,11 @@ param location string = resourceGroup().location
 ])
 param env string = 'dev'
 
-param deployVnet bool = true
+
+param deployInit bool = true
 param deployAzServices bool = true
-param deployAks bool = true
+param deployAks bool = false
 param deployVm bool = false
-//param deployPe bool = false
 
 // Variables
 var name = '${resourcename}-${env}'
@@ -30,7 +30,30 @@ module umi 'umi.bicep' = {
   }
 }
 
-module vnet 'vnet.bicep' = if(deployVnet){
+module privateDnsZone 'privatednszone.bicep' = if(deployInit) {
+  name: 'privateDnsZoneDeploy'
+  params: {
+    privateDnsZoneName: '${name}.privatelink.${toLower(location)}.azmk8s.io'
+    name: name
+    vnetId: vnet.outputs.vnetId
+  }
+  dependsOn: [
+    umi
+  ]
+}
+
+module storage 'storageaccount.bicep' = if(deployInit) {
+  name: 'stgDeploy'
+  params: {
+    location: location
+    name: name 
+  }
+  dependsOn: [
+    umi
+  ]
+}
+
+module vnet 'vnet.bicep' = if(deployInit){
   name: 'vnetDeploy'
   params: {
     addressprefix: '10.0.0.0/21'
@@ -62,30 +85,9 @@ module vnet 'vnet.bicep' = if(deployVnet){
   ]
 }
 
-module privateDnsZone 'privatednszone.bicep' = if(deployAzServices){
-  name: 'privateDnsZoneDeploy'
-  params: {
-    privateDnsZoneName: '${name}.privatelink.${toLower(location)}.azmk8s.io'
-    name: name
-    vnetId: vnet.outputs.vnetId
-  }
-  dependsOn: [
-    umi
-  ]
-}
 
-module storage 'storageaccount.bicep' = if(deployAzServices){
-  name: 'stgDeploy'
-  params: {
-    location: location
-    name: name
-  }
-  dependsOn: [
-    umi
-  ]
-}
 
-module la 'loganalytics.bicep' = if(deployAzServices){
+module la 'loganalytics.bicep' = if(deployAzServices) {
   name: 'laDeploy'
   params: {
     location: location
@@ -93,7 +95,7 @@ module la 'loganalytics.bicep' = if(deployAzServices){
   }
 }
 
-module acr 'acr.bicep' = if(deployAzServices){
+module acr 'acr.bicep' = if(deployAzServices) {
   name: 'acrDeploy'
   params: {
     location: location
@@ -104,7 +106,7 @@ module acr 'acr.bicep' = if(deployAzServices){
   ]
 }
 
-module akv 'akv.bicep' = if(deployAzServices){
+module akv 'akv.bicep' = if(deployAzServices) {
   name: 'akvDeploy'
   params: {
     location: location
@@ -136,7 +138,6 @@ module akscni 'aks.bicep' = if (networkPlugin == 'azure' && deployAks) {
     akv
     acr
     la
-    
   ]
 }
 
@@ -175,5 +176,4 @@ module vm1 'vm.bicep' = if(deployVm) {
     vm_pwd:vmpwd
     storageAccountName: storage.outputs.storageAccountName
   }
-
 }

@@ -84,6 +84,8 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-07-02-preview' = {
       enablePrivateClusterPublicFQDN: false
     }
     
+    //publicNetworkAccess: 'Disabled'
+    
 
     oidcIssuerProfile: {
       enabled: true
