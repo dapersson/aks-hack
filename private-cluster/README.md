@@ -177,3 +177,37 @@ az deployment group create -g [rg-resourcename] -n mainDeploy -f main.bicep -p r
 Verify the deployment in the portal.
 
 ## Step 9 - Deploy AKS workload
+
+Login to the VM. 
+Open a terminal and install Git. Run "choco install git"
+Create a folder under c:\ called "temp"
+```shell
+cd\
+mkdir temp
+cd .\temp
+```
+Clone your repo. 
+```shell
+git clone git clone https://github.com/[your github account]/aks-hack.git
+```
+Goto the Azure portal and copy the instrumentation key for Application Insights. 
+Open the file aks-hack/private-cluster/sample/distributed-calculator/deploy/open-telemetry-collector-appinsights.yaml
+Paste your instrumentation key inside the quotes "<INSTRUMENTATION-KEY>"
+In the terminal navigate to aks-hack/private-cluster/sample/distributed-calculator/deploy
+Run the following commands. 
+
+```shell
+kubectl create ns redis 
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+helm install redis bitnami/redis --namespace redis
+```
+Grab the kubernetes secret from the "redis" namespace and decode it. 
+Create a new new namespace called "sample" and create the secret and deploy the workload.    
+
+```shell
+kubectl create ns sample 
+kubectl create secret generic redis --from-literal=redis-password=[your redis password] -n sample
+kubectl apply -f . -n sample
+```
+
