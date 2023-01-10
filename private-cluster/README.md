@@ -54,7 +54,7 @@ az account set -s [your subscription]
 Need to register the following features. This is a two step process, run the following two commands we will return to this later because it can take up to 10 minutes to be finished.
 ```shell
 az feature register --namespace microsoft.compute --name EncryptionAtHost
-az provider register --namespace Microsoft.ContainerService
+az feature register --namespace "Microsoft.ContainerService" --name "EnableWorkloadIdentityPreview"
 ```
 ## Step 2 - Create resourcegroup and choose resourcename
 
@@ -99,7 +99,7 @@ Verify the deployment in the portal.
 
 Run the following Azure CLI commands. This is the second step in registering new features that we did in step 1.  
 ```shell
-az provider register -n microsoft.compute
+az provider register --namespace microsoft.compute
 az provider register --namespace Microsoft.ContainerService
 ```
 Change the following parameter to "true" in main.bicep
