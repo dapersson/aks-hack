@@ -11,7 +11,7 @@ This repo contains a step-by-step giude to setup a private AKS cluster.
 
 - Github account
 - VS code with GitHub Codespaces extension
-- Azure subscription 
+- Azure subscription with RBAC role Owner
 
 ## Getting started
 
@@ -157,3 +157,23 @@ Save the file restart the terminal.
 Validate by running "k get pods" in a terminal. 
 
 Done.
+
+
+## Step 8 - Deploy private endpoints
+
+Change the following parameters in main.bicep
+```shell
+param deployInit bool = true
+param deployAzServices bool = true
+param deployAks bool = false
+param deployVm bool = false
+param deployPe bool = true
+
+```
+This will disable AKS and VM deployment (to save time) and enable deployment of private endpoints for AKV and ACR. Run the following command. 
+```shell
+az deployment group create -g [rg-resourcename] -n mainDeploy -f main.bicep -p resourcename=[resourcename]
+```
+Verify the deployment in the portal.
+
+## Step 9 - Deploy AKS workload

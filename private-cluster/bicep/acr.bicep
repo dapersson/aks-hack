@@ -34,3 +34,5 @@ resource setAcrRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-preview'
     principalType: 'ServicePrincipal'
   }
 }
+
+output acrId string = acr.id

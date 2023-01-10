@@ -3,6 +3,7 @@ param addressprefix string
 param subnets array
 param location string
 param snkubenetAddrPrefix string =  ''
+param snPeAddrPrefix string =  ''
 
 
 var networkContributorRoleDefId = '4d97b98b-1d4f-4787-a291-c67834d212e7'
@@ -40,6 +41,10 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-07-01' = {
   resource subnetvms 'subnets' existing = {
     name: 'vnet-${name}-sn-vms'
   }
+
+  resource subnetpe 'subnets' existing = {
+    name: 'vnet-${name}-sn-pe'
+  }
   
 }
 
@@ -54,6 +59,17 @@ resource snakskubenet 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = i
     }
   } 
 }
+
+resource snPe 'Microsoft.Network/virtualNetworks/subnets@2022-07-01' = if(snPeAddrPrefix != ''){
+  name: 'vnet-${name}-sn-pe'
+  parent: vnet
+  properties: {
+    addressPrefix: snPeAddrPrefix 
+    privateEndpointNetworkPolicies: 'Enabled'
+  } 
+}
+
+
 
 
 resource setVnetRbac 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
@@ -80,4 +96,6 @@ output kubenetrtId string = rt.id
 output vnetId string = vnet.id
 output subnetIdakscni string = vnet::subnetakscni.id 
 output subnetIdakskubenet string = vnet::subnetakskubenet.id 
-output subnetIdvms string = vnet::subnetvms.id 
+output subnetIdvms string = vnet::subnetvms.id
+output subnetIdpe string = vnet::subnetpe.id 
+output vnetname string = vnet.name 

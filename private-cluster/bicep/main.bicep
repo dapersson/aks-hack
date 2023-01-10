@@ -14,9 +14,11 @@ param env string = 'dev'
 
 
 param deployInit bool = true
-param deployAzServices bool = false
+param deployAzServices bool = true
 param deployAks bool = false
 param deployVm bool = false
+param deployPe bool = false
+param deployAzSql bool = false
 
 // Variables
 var name = '${resourcename}-${env}'
@@ -30,7 +32,7 @@ module umi 'umi.bicep' = {
   }
 }
 
-module privateDnsZone 'privatednszone.bicep' = if(deployInit) {
+module aksprivateDnsZone 'privatednszone.bicep' = if(deployInit) {
   name: 'privateDnsZoneDeploy'
   params: {
     privateDnsZoneName: '${name}.privatelink.${toLower(location)}.azmk8s.io'
@@ -60,6 +62,7 @@ module vnet 'vnet.bicep' = if(deployInit){
     location: location
     name: name
     snkubenetAddrPrefix: '10.0.3.0/24'
+    snPeAddrPrefix: '10.0.2.32/27'
     subnets: [
       {
         name: 'sn-aks-cni'
@@ -129,7 +132,7 @@ module akscni 'aks.bicep' = if (networkPlugin == 'azure' && deployAks) {
     location: location
     adminGroupObjectIDs: admingroupobjectid
     kubernetesVersion: '1.24.6' // az aks get-versions --location westeurope --output table
-    privateDnsZoneId: privateDnsZone.outputs.privateDNSZoneId
+    privateDnsZoneId: aksprivateDnsZone.outputs.privateDNSZoneId
     networkPlugin: networkPlugin
 
   }
@@ -154,7 +157,7 @@ module akskubenet 'aks.bicep' = if (networkPlugin == 'kubenet' && deployAks) {
     location: location
     adminGroupObjectIDs: admingroupobjectid
     kubernetesVersion: '1.24.3' // az aks get-versions --location westeurope --output table
-    privateDnsZoneId: privateDnsZone.outputs.privateDNSZoneId
+    privateDnsZoneId: aksprivateDnsZone.outputs.privateDNSZoneId
     networkPlugin: networkPlugin
   }
   dependsOn: [
@@ -175,5 +178,70 @@ module vm1 'vm.bicep' = if(deployVm) {
     location:location
     vm_pwd:vmpwd
     storageAccountName: storage.outputs.storageAccountName
+  }
+}
+
+
+module akvprivateDnsZone 'privatednszone.bicep' = if(deployPe) {
+  name: 'akvprivateDnsZoneDeploy'
+  params: {
+    privateDnsZoneName: 'privatelink.vaultcore.azure.net'
+    name: name
+    vnetId: vnet.outputs.vnetId
+  }
+  dependsOn: [
+    umi
+  ]
+}
+
+
+module acrprivateDnsZone 'privatednszone.bicep' = if(deployPe) {
+  name: 'acrprivateDnsZoneDeploy'
+  params: {
+    privateDnsZoneName: 'privatelink.azurecr.io'
+    name: name
+    vnetId: vnet.outputs.vnetId
+  }
+  dependsOn: [
+    umi
+  ]
+}
+
+module peAcr 'privateendpoint.bicep' = if(deployPe) {
+  name: 'peAcrDeploy'
+  params: {
+    destinationId: acr.outputs.acrId
+    groupId: 'registry'
+    location: location
+    name: '${name}-acr'
+    privateDnsZoneName: 'privatelink.azurecr.io'
+    subnetId: vnet.outputs.subnetIdpe
+  }
+  dependsOn: [
+    acrprivateDnsZone
+  ]
+}
+
+module peAkv 'privateendpoint.bicep' = if(deployPe) {
+  name: 'peAkvDeploy'
+  params: {
+    destinationId: akv.outputs.akvId
+    groupId: 'vault'
+    location: location
+    name: '${name}-akv'
+    privateDnsZoneName: 'privatelink.vaultcore.azure.net'
+    subnetId: vnet.outputs.subnetIdpe
+  }
+  dependsOn: [
+    akvprivateDnsZone
+  ]
+}
+
+module sql 'azsql.bicep' = if(deployAzSql){
+  name: 'sqlDeploy'
+  params: {
+    location: location
+    name: name
+    sqlpwd: '${vmpwd}12345'
   }
 }

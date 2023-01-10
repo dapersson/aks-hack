@@ -36,3 +36,5 @@ resource setAkvRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-preview'
     principalType: 'ServicePrincipal'
   }
 }
+
+output akvId string = akv.id
