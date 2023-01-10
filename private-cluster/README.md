@@ -4,7 +4,7 @@ This repo contains a step-by-step giude to setup a private AKS cluster.
 
 # Overview
 
-[Picture showing what to setup]
+![env](img/env.png)
 
 
 ## Prerequisites 
