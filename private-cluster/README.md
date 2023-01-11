@@ -206,3 +206,4 @@ kubectl apply -f . -n sample
 
 Run "kubectl get svc -n sample" to get the external IP and use a browser to access the frontend of the calculator.  
 
+
