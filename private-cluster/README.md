@@ -197,17 +197,12 @@ In the terminal navigate to aks-hack/private-cluster/sample/distributed-calculat
 Run the following commands. 
 
 ```shell
-kubectl create ns redis 
+kubectl create ns sample 
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
-helm install redis bitnami/redis --namespace redis
-```
-Grab the kubernetes secret from the "redis" namespace and decode it. 
-Create a new new namespace called "sample" and create the secret and deploy the workload.    
-
-```shell
-kubectl create ns sample 
-kubectl create secret generic redis --from-literal=redis-password=[your redis password] -n sample
+helm install redis bitnami/redis --namespace sample
 kubectl apply -f . -n sample
 ```
+
+Run "kubectl get svc -n sample" to get the external IP and use a browser to access the frontend of the calculator.  
 
