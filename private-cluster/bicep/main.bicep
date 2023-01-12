@@ -14,7 +14,7 @@ param env string = 'dev'
 
 
 param deployInit bool = true
-param deployAzServices bool = false
+param deployAzServices bool = true
 param deployAks bool = false
 param deployVm bool = false
 param deployPe bool = false
@@ -31,6 +31,7 @@ module umi 'umi.bicep' = {
   params: {
     location: location
     name: name
+    
   }
 }
 

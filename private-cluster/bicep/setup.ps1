@@ -6,4 +6,5 @@ choco install kubectx -y
 choco install azure-kubelogin -y
 choco install openlens -y --ignore-checksums
 choco install kubernetes-helm -y
+choco install git -y
 
