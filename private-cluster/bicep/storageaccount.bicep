@@ -15,6 +15,9 @@ resource stg 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   sku: {
     name: 'Standard_LRS'
   }
+  properties: {
+    allowBlobPublicAccess:false
+  }
 }
 
 // Storage account Blobservice
@@ -40,3 +43,4 @@ resource setStorageAccountRbac 'Microsoft.Authorization/roleAssignments@2020-04-
 }
 
 output storageAccountName string = stg.name
+output storageAccountId string = stg.id

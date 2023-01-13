@@ -16,8 +16,8 @@ param env string = 'dev'
 param deployInit bool = true
 param deployAzServices bool = true
 param deployAks bool = false
-param deployVm bool = false
-param deployPe bool = false
+param deployVm bool = true
+param deployPe bool = true
 param deployAzSql bool = false
 
 
@@ -210,6 +210,20 @@ module acrprivateDnsZone 'privatednszone.bicep' = if(deployPe) {
   ]
 }
 
+module stgprivateDnsZone 'privatednszone.bicep' = if(deployPe) {
+  name: 'stgprivateDnsZoneDeploy'
+  params: {
+    privateDnsZoneName: 'privatelink.blob.${environment().suffixes.storage}'
+    name: name
+    vnetId: vnet.outputs.vnetId
+  }
+  dependsOn: [
+    umi
+  ]
+}
+
+
+
 module peAcr 'privateendpoint.bicep' = if(deployPe) {
   name: 'peAcrDeploy'
   params: {
@@ -237,6 +251,21 @@ module peAkv 'privateendpoint.bicep' = if(deployPe) {
   }
   dependsOn: [
     akvprivateDnsZone
+  ]
+}
+
+module peStg 'privateendpoint.bicep' = if(deployPe) {
+  name: 'peStgDeploy'
+  params: {
+    destinationId: storage.outputs.storageAccountId
+    groupId: 'blob'
+    location: location
+    name: '${name}-stg'
+    privateDnsZoneName: 'privatelink.blob.core.windows.net'
+    subnetId: vnet.outputs.subnetIdpe
+  }
+  dependsOn: [
+    stgprivateDnsZone
   ]
 }
 

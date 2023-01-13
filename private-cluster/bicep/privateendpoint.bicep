@@ -6,6 +6,7 @@ param destinationId string
   [
   'privatelink.azurecr.io'
   'privatelink.vaultcore.azure.net'
+  'privatelink.blob.core.windows.net'
   ]
 )
 param privateDnsZoneName string
@@ -13,6 +14,7 @@ param privateDnsZoneName string
   [
   'registry'
   'vault'
+  'blob'
   ]
 )
 param groupId string
