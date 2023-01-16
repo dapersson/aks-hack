@@ -17,6 +17,7 @@ resource stg 'Microsoft.Storage/storageAccounts@2022-09-01' = {
   }
   properties: {
     allowBlobPublicAccess:false
+    supportsHttpsTrafficOnly: true
   }
 }
 
@@ -24,6 +25,7 @@ resource stg 'Microsoft.Storage/storageAccounts@2022-09-01' = {
 resource blobservice 'Microsoft.Storage/storageAccounts/blobServices@2022-05-01' = {
   name: 'default'
   parent: stg
+
 }
 
 // Storage account blob container
