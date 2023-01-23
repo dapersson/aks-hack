@@ -20,6 +20,7 @@ param adminGroupObjectIDs string
 param privateDnsZoneId string
 param podCidr string = ''
 param networkPlugin string
+param enableAAD string = '' 
 
 // vars
 param kubernetesVersion string
@@ -47,6 +48,8 @@ resource miOperatorRbac 'Microsoft.Authorization/roleAssignments@2020-04-01-prev
   }
 }
 
+
+
 resource aks 'Microsoft.ContainerService/managedClusters@2022-07-02-preview' = {
   name: 'aks-${name}'
   location: location
@@ -60,14 +63,19 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-07-02-preview' = {
   properties: {
     kubernetesVersion: kubernetesVersion
     enableRBAC: true
-    disableLocalAccounts: true
-    aadProfile: {
+    disableLocalAccounts: enableAAD == 'true' ? true : false
+    aadProfile: enableAAD == 'true' ? {
       enableAzureRBAC: true
       tenantID: subscription().tenantId
       managed: true
       adminGroupObjectIDs: [
         adminGroupObjectIDs
       ]
+    }:{
+      enableAzureRBAC: false
+      tenantID: subscription().tenantId
+      managed: true
+      
     }
 
     dnsPrefix: 'aks-${name}'
@@ -85,7 +93,6 @@ resource aks 'Microsoft.ContainerService/managedClusters@2022-07-02-preview' = {
       enablePrivateClusterPublicFQDN: false
     }
     
-    //publicNetworkAccess: 'Disabled'
     
 
     oidcIssuerProfile: {

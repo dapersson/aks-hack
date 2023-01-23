@@ -178,8 +178,7 @@ Verify the deployment in the portal.
 
 ## Step 9 - Deploy AKS workload
 
-Login to the VM. 
-Open a terminal and install Git. Run "choco install git"
+Login to the VM.
 Create a folder under c:\ called "temp"
 ```shell
 cd\
