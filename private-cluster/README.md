@@ -203,6 +203,32 @@ helm install redis bitnami/redis --namespace sample
 kubectl apply -f . -n sample
 ```
 
-Run "kubectl get svc -n sample" to get the external IP and use a browser to access the frontend of the calculator.  
+Run "kubectl get svc -n sample" to get the external IP and use a browser to access the frontend of the calculator.
+
+Use all the calculator methods and look in Application insights to view the telemetry. 
 
 
+## Step 10 - Use Policies in AKS
+
+Navigate to aks-hack/private-cluster/policy on the VM. Deploy the policy initiative. 
+
+```shell
+az deployment sub create --location westeurope --template-file aks_initiative_template.json --parameters aks_initiative_params.json
+```
+
+Validate the policy initiative in the portal. The deployment creates an assignment on subscription level, this is not what we want so delete the assignment on the subscription level using the portal, then create the assignment on the resource group level using a bicep file.  
+
+```shell
+az deployment group create -g rg-[resourcename] -f policy.bicep -p subId=[subscriptionId]
+```
+
+Validate the assignment using the portal. 
+
+Try to deploy the busybox.yaml to the sample namespace. 
+
+```shell
+kubectl apply -f .\busybox.yaml
+```
+
+
+Learn more about AKS policies https://learn.microsoft.com/en-us/azure/aks/policy-reference
